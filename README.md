@@ -1,6 +1,8 @@
 # TODOS
 ## Important
 - [ ] make display of information look nice and add feature to instantly copy paste the output
+- [ ] create github workflow to automatically build the electron app (and test if it works before merging new commits)
+- [ ] create executeable
 - [ ] optimize dictionary with medicine names and often used words
 - [ ] change regex depending on how the structure is like
 
