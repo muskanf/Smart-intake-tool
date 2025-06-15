@@ -1,3 +1,14 @@
+# TODOS
+## Important
+- [ ] make display of information look nice and add feature to instantly copy paste the output
+- [ ] optimize dictionary with medicine names and often used words
+- [ ] change regex depending on how the structure is like
+
+## Nice to have
+- [ ] add option that recognizes when there is an error with missing numbers or medicine and show that to pharmacist with red tint or so, so they definitely manually check that again
+- [ ] fine tune OCR with examples (you can artificially create them as well, after you at least got the basic structure down and then train the model with that)
+
+
 # 💊 Smart Intake: AI-Powered Prescription Reader
 
 **Smart Intake** is a lightweight, AI-powered desktop tool that lets pharmacists drag-and-drop prescription images or PDFs and automatically extracts structured medication information using state-of-the-art handwriting OCR (via Microsoft's TrOCR model).
