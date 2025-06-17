@@ -45,22 +45,36 @@ function App() {
 
   const handleSend = () => {
     if (!data) return;
-    fs.appendFileSync('output/output.csv', JSON.stringify(data) + '\n');
-    alert("Exported to CSV!");
+    // Format data as a readable string
+    const clipboardText = 
+      `Patient: ${data.name || '—'}\n` +
+      `DOB: ${data.dob || '—'}\n\n` +
+      `Medication: ${data.medication || '—'}${data.dosage ? ' ' + data.dosage : ''}\n` +
+      `Frequency: ${data.frequency || '—'}`;
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(clipboardText)
+      .then(() => {
+        console.log('Prescription copied to clipboard');
+        alert("Prescription copied to clipboard");
+      })
+      .catch(err => {
+        console.error('Failed to copy prescription: ', err);
+        alert("Failed to copy to clipboard");
+      });
   };
 
   // ---------- Reusable chunks ----------
   const hero = (title, subtitle, actions) =>
     React.createElement(Container, {
       maxWidth: "md",
-      sx: { pt: 12, pb: 8, textAlign: "center" }
+      sx: { pt: 15, pb: 10, textAlign: "center" }
     }, [
-      React.createElement(Typography, { variant: "h3", component: "h1", gutterBottom: true }, title),
-      React.createElement(Typography, { variant: "h6", color: "text.secondary", mb: 4 }, subtitle),
+      React.createElement(Typography, { variant: "h1", component: "h1", gutterBottom: true }, title),
+      React.createElement(Typography, { variant: "h3", color: "text.secondary", mb: 4 }, subtitle),
       React.createElement(Stack, { direction: "row", spacing: 2, justifyContent: "center" }, actions)
     ]);
 
-  // ---------- UI per step ----------
   if (step === "welcome") {
     return hero(
       "Welcome to m3dswft",
@@ -77,7 +91,7 @@ function App() {
   if (step === "instructions") {
     return hero(
       "How it Works",
-      "1. Drag a scanned prescription or click Upload\n2. AI reads patient, meds & sig codes\n3. Review & send to RxConnect",
+      "1. Drag a scanned prescription or click Upload\n2. AI reads patient prescription information\n3. Review & copy to clipboard.",
       [
         React.createElement(Button, {
           variant: "outlined", size: "large",
@@ -85,16 +99,16 @@ function App() {
         }, "Proceed to Upload"),
         React.createElement(Link, {
           href: "#", underline: "hover",
-          onClick: () => setStep("welcome")
+          onClick: () => setStep("Welcome")
         }, "Back")
       ]
     );
   }
 
-  // ---------- Upload / OCR screen ----------
-  return React.createElement(Container, { maxWidth: "md", sx: { pt: 6, pb: 10 } }, [
+  // Upload / OCR screen
+  return React.createElement(Container, { maxWidth: "md", sx: { pt: 20, pb: 10 } }, [
 
-    React.createElement(Stack, { spacing: 3 }, [
+    React.createElement(Stack, { spacing: 5 }, [
 
       // Drop zone + upload button
       React.createElement(Paper, {
@@ -102,10 +116,10 @@ function App() {
         onDrop: handleDrop,
         onDragOver: e => e.preventDefault(),
         sx: {
-          p: 5, textAlign: "center", border: "2px dashed #90caf9",
+          p: 5, textAlign: "center", border: "1px dashedrgb(14, 16, 18)",
           backgroundColor: "#e3f2fd", cursor: "pointer"
         }
-      }, "📄  Drag & Drop Prescription Here"),
+      }, "Drag & Drop Prescription Here"),
 
       React.createElement("input", {
         id: "fileInput", type: "file", accept: ".pdf,.png,.jpg,.jpeg",
@@ -148,7 +162,7 @@ function App() {
         variant: "contained",
         disabled: !data,
         onClick: handleSend
-      }, "Parse Prescription")
+      }, "Copy Entire Prescription to Clipboard")
     ]),
 
     // Back link
