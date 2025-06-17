@@ -179,4 +179,4 @@ node_modules/
 .node_modules/
 
 
-ocr_training
+ocr_training/data
