@@ -12,24 +12,34 @@ function App() {
   const [step, setStep] = React.useState("welcome");   // welcome | instructions | upload
   const [data, setData] = React.useState(null);
   const [loading, setLoading] = React.useState(false);
-
-  // ---------- OCR pipeline ----------
+  //OCR
   const runOCR = (filePath) => {
     setLoading(true);
     setData(null);
 
-    const path = require('path')
-    const script = path.join(__dirname, 'extract_rx.py')
-    const py = spawn('python', [script, filePath])
+    const path = require('path');
+    const script = path.join(__dirname, 'extract_rx.py');
+    const py = spawn('python', [script, filePath]);
     let output = '';
 
-    py.stdout.on('data', chunk => output += chunk.toString());
+    py.stdout.on('data', (chunk) => {
+      output += chunk.toString();
+    });
+    
     py.stdout.on('end', () => {
-      try { setData(JSON.parse(output)); }
-      catch { alert("Could not parse OCR output."); }
+      try { 
+        // Just set the raw output as data without parsing to JSON
+        setData(output.trim());
+      } catch (err) { 
+        console.error("OCR error:", err);
+        alert("Could not process OCR output."); 
+      }
       setLoading(false);
     });
-    py.stderr.on('data', err => console.error(err.toString()));
+    
+    py.stderr.on('data', (err) => {
+      console.error(err.toString());
+    });
   };
 
   // ---------- Handlers ----------
@@ -45,21 +55,15 @@ function App() {
 
   const handleSend = () => {
     if (!data) return;
-    // Format data as a readable string
-    const clipboardText = 
-      `Patient: ${data.name || '—'}\n` +
-      `DOB: ${data.dob || '—'}\n\n` +
-      `Medication: ${data.medication || '—'}${data.dosage ? ' ' + data.dosage : ''}\n` +
-      `Frequency: ${data.frequency || '—'}`;
     
-    // Copy to clipboard
-    navigator.clipboard.writeText(clipboardText)
+    // Since data is now just a text string, we can copy it directly
+    navigator.clipboard.writeText(data)
       .then(() => {
-        console.log('Prescription copied to clipboard');
-        alert("Prescription copied to clipboard");
+        console.log('Text copied to clipboard');
+        alert("Text copied to clipboard");
       })
       .catch(err => {
-        console.error('Failed to copy prescription: ', err);
+        console.error('Failed to copy text: ', err);
         alert("Failed to copy to clipboard");
       });
   };
@@ -68,17 +72,17 @@ function App() {
   const hero = (title, subtitle, actions) =>
     React.createElement(Container, {
       maxWidth: "md",
-      sx: { pt: 15, pb: 10, textAlign: "center" }
+      sx: { pt: 5, pb: 5, textAlign: "center" }
     }, [
       React.createElement(Typography, { variant: "h1", component: "h1", gutterBottom: true }, title),
-      React.createElement(Typography, { variant: "h3", color: "text.secondary", mb: 4 }, subtitle),
+      React.createElement(Typography, { variant: "h5", color: "text.secondary", mb: 4 }, subtitle),
       React.createElement(Stack, { direction: "row", spacing: 2, justifyContent: "center" }, actions)
     ]);
 
   if (step === "welcome") {
     return hero(
       "Welcome to m3dswft",
-      "AI-powered prescription intake in seconds.",
+      "Automating Pharmacy Workflows.",
       [
         React.createElement(Button, {
           variant: "contained", size: "large",
@@ -90,8 +94,10 @@ function App() {
 
   if (step === "instructions") {
     return hero(
-      "How it Works",
-      "1. Drag a scanned prescription or click Upload\n2. AI reads patient prescription information\n3. Review & copy to clipboard.",
+      "About",
+      "Want to extract text from digital faxes or typed prescriptions? " +
+      "This tool uses OCR to convert images to text, making it easier to process prescriptions." +
+      "Click 'Proceed to Upload' to start.",
       [
         React.createElement(Button, {
           variant: "outlined", size: "large",
@@ -106,7 +112,7 @@ function App() {
   }
 
   // Upload / OCR screen
-  return React.createElement(Container, { maxWidth: "md", sx: { pt: 20, pb: 10 } }, [
+  return React.createElement(Container, { maxWidth: "md", sx: { pt: 5, pb: 10 } }, [
 
     React.createElement(Stack, { spacing: 5 }, [
 
@@ -116,10 +122,10 @@ function App() {
         onDrop: handleDrop,
         onDragOver: e => e.preventDefault(),
         sx: {
-          p: 5, textAlign: "center", border: "1px dashedrgb(14, 16, 18)",
-          backgroundColor: "#e3f2fd", cursor: "pointer"
+          p: 5, textAlign: "center", border: "2px dashedrgb(14, 16, 18)",
+          backgroundColor: "#636363", cursor: "pointer"
         }
-      }, "Drag & Drop Prescription Here"),
+      }, "Drag & Drop Digital Fax or Typed Prescription Here"),
 
       React.createElement("input", {
         id: "fileInput", type: "file", accept: ".pdf,.png,.jpg,.jpeg",
@@ -129,7 +135,12 @@ function App() {
       React.createElement(Button, {
         variant: "contained",
         onClick: () => document.getElementById('fileInput').click()
-      }, "Choose File"),
+      }, "Choose file here"),
+
+      // React.createElement(Button, {
+      //   variant: "contained",
+      //   onClick: () => document.getElementById('fileInput2').click()
+      // }, "Choose handwritten file here"), this one we can uncomment later when we have handwriting working.
 
       // Loading spinner
       loading && React.createElement(Box, { textAlign: "center" },
@@ -139,21 +150,19 @@ function App() {
       // Result card
       data && React.createElement(Card, { id: "results-card" },
         React.createElement(CardContent, null, [
-
-          React.createElement(Typography, { variant: "h6" },
-            `Patient: ${data.name || '—'}`),
-
-          React.createElement(Typography, { variant: "body1" },
-            `DOB: ${data.dob || '—'}`),
-
-          React.createElement(Typography, { variant: "subtitle1", sx: { mt: 2 } },
-            "Medication"),
-
-          React.createElement(Typography, { variant: "body1" },
-            `${data.medication || '—'}${data.dosage ? ' ' + data.dosage : ''}`),
-
-          React.createElement(Typography, { variant: "body2", sx: { mt: 1 } },
-            `Frequency: ${data.frequency || '—'}`)
+          React.createElement(Typography, { variant: "h5", gutterBottom: true }, 
+            "Results:"),
+          React.createElement(Typography, { 
+            variant: "body1", 
+            component: "pre",
+            sx: { 
+              whiteSpace: "pre-wrap", 
+              fontFamily: "monospace",
+              backgroundColor: "#f5f5f5",
+              p: 2,
+              borderRadius: 1
+            }
+          }, data)
         ])
       ),
 
@@ -162,7 +171,7 @@ function App() {
         variant: "contained",
         disabled: !data,
         onClick: handleSend
-      }, "Copy Entire Prescription to Clipboard")
+      }, "Copy OCR Results to Clipboard")
     ]),
 
     // Back link
@@ -177,4 +186,3 @@ function App() {
 
 ReactDOM.createRoot(document.getElementById("root"))
   .render(React.createElement(App));
-
